@@ -1,140 +1,151 @@
-var sword, swordImage, enemyG, enemyImage, fruit1, fruit2,
-    fruit3, fruit4, fruitG, fruit1Image, fruit2Image, fruit3Image, fruit4Image, score,gameOverImage
-var PLAY=1
-var END=0
-var gameState=PLAY
+//Game States
+var PLAY=1;
+var END=0;
+var gameState=1;
 
-
+var knife,fruit ,monster,fruitGroup,monsterGroup, score,r,randomFruit, position;
+var knifeImage , fruit1, fruit2 ,fruit3,fruit4, monsterImage, gameOverImage;
 
 function preload(){
-  swordImage= loadImage("sword.png")
-  enemyImage=loadAnimation("alien1.png","alien2.png")
-  fruit1Image=loadImage("fruit1.png")
-  fruit2Image=loadImage("fruit2.png")
-  fruit3Image=loadImage("fruit3.png")
-  fruit4Image=loadImage("fruit4.png")
-  gameOverImage=loadImage("gameover.png")
- 
+  
+  knifeImage = loadImage("knife.png");
+  monsterImage = loadAnimation("alien1.png","alien2.png")
+  fruit1 = loadImage("fruit1.png");
+  fruit2 = loadImage("fruit2.png");
+  fruit3 = loadImage("fruit3.png");
+  fruit4 = loadImage("fruit4.png");
+  gameOverImage = loadImage("gameover.png")
+
+  //load sound here
+  gameoverSound = loadSound("gameover.mp3");
+  cuttingsound = loadSound("knifeSwoosh.mp3");
 }
 
-function setup(){
+
+
+function setup() {
   createCanvas(600, 600);
   
-  sword=createSprite(200,200,100,100)
-  sword.addImage(swordImage)
-  sword.scale=0.5
+  //creating sword
+   knife=createSprite(40,200,20,20);
+   knife.addImage(knifeImage);
+   knife.scale=0.7
   
-  
-  
-  enemyG= new Group()
-  fruitG= new Group()
-  
-  score=0
+  //set collider for sword
+  knife.setCollider("rectangle",0,0,40,40);
+
+  // Score variables and Groups
+  score=0;
+  fruitGroup=createGroup();
+  monsterGroup=createGroup();
   
 }
 
-function draw(){
-background("skyblue")
+function draw() {
+  background("lightblue");
   
-  
+  if(gameState===PLAY){
 
- if (gameState===PLAY) {
-sword.x=World.mouseX
-sword.y=World.mouseY
+    score = score + Math.round(frameCount/380);
+    
+    
+    //Call fruits and Monster function
+    fruits();
+    Monster();
+    
+    // Move sword with mouse
+    knife.y=World.mouseY;
+    knife.x=World.mouseX;
   
-  var select_item = Math.round(random(1,5));
-  if (World.frameCount%100===0){
-   if (select_item == 1) {
-      fruit1()
-    } else if (select_item == 2) {
-      enemy()
-    } else if (select_item == 3) {
-      fruit2()
-    } else if (select_item == 4){
-      fruit3()
-   } else {
-      fruit4()
+    // Increase score if sword touching fruit
+    if(fruitGroup.isTouching(knife)){
+      fruitGroup.destroyEach();
+      cuttingsound.play();
     }
-     }
- 
-   if(sword.isTouching(fruitG)){
-     fruitG.destroyEach()
-    score=score+1
-     }
-   
-   else
-     
-   if(sword.isTouching(enemyG)){
-     enemyG.destroyEach()
-    gameState=END;
-     fruitG.destroyEach()
-     enemyG.setVelocityXEach(0)
-     fruitG.setVelocityXEach(0)
-     sword.addImage(gameOverImage)
-     sword.scale=2
-     sword.x=300
-     sword.y=200
-     
-     
-     }
-   }
-  
-  
-  
-  
-  
- 
+    else
+    {
+      // Go to end state if sword touching enemy
+      if(monsterGroup.isTouching(knife)){
+        gameState=END;
+        
+        //add gameover sound here
+        gameoverSound.play();
+        
+        fruitGroup.destroyEach();
+        monsterGroup.destroyEach();
+        fruitGroup.setVelocityXEach(0);
+        monsterGroup.setVelocityXEach(0);
+        
+        // Change the animation of sword to gameover and reset its position
+        knife.addImage(gameOverImage);
+        knife.scale=2;
+        knife.x=300;
+        knife.y=300;
+      }
+    }
+  }
   
   drawSprites();
-  
- text("Score: "+ score, 500,50);
-  
+  //Display score
+  textSize(25);
+  text("Score : "+ score,250,50);
 }
 
-function enemy(){
 
- var enemy=createSprite(600,Math.round(random(30,400)),10,10)
-  
- enemy.addAnimation("enemy_blinking",enemyImage)
-  enemy.velocityX=-6
-  enemy.scale=0.75
-  enemy.lifetime=150
-  enemyG.add(enemy)
-  
+function Monster(){
+  if(World.frameCount%100===0){
+    monster=createSprite(400,200,20,20);
+    monster.addAnimation("moving", monsterImage);
+    monster.y=Math.round(random(100,550));
+    //update below give line of code for increase monsterGroup speed by 10
+    monster.velocityX = -8;
+    monster.setLifetime=50;
+    
+    monsterGroup.add(monster);
+  }
 }
 
-function fruit1(){
-   var fruit1=createSprite(600,Math.round(random(30,400)),10,10)
-    fruit1.addImage(fruit1Image)
-  fruit1.velocityX=-6
-  fruit1.scale=0.2
-  fruit1.lifetime=150
-  fruitG.add(fruit1)
+function fruits(){
+  if(World.frameCount%80===0){
+    position = Math.round(random(1,2));
+    fruit=createSprite(400,200,20,20);
+    
+     //using random variable change the position of fruit, to make it more challenging
+    
+    if(position==1)
+    {
+    fruit.x=600;
+    //update below give line of code for increase fruitGroup speed by 4
+    fruit.velocityX=-7
+    }
+    else
+    {
+      if(position==2){
+      fruit.x=0;
+      
+     //update below give line of code for increase fruitGroup speed by 4
+      fruit.velocityX= 7;
+      }
+    }
+    
+    fruit.scale=0.2;
+     //fruit.debug=true;
+     r=Math.round(random(1,4));
+    if (r == 1) {
+      fruit.addImage(fruit1);
+    } else if (r == 2) {
+      fruit.addImage(fruit2);
+    } else if (r == 3) {
+      fruit.addImage(fruit3);
+    } else {
+      fruit.addImage(fruit4);
+    }
+    
+    fruit.y=Math.round(random(50,550));
+   
+    
+    fruit.setLifetime=100;
+    
+    fruitGroup.add(fruit);
   }
-
-function fruit2(){
-   var fruit2=createSprite(600,Math.round(random(30,400)),10,10)
-    fruit2.addImage(fruit2Image)
-  fruit2.velocityX=-6
-  fruit2.scale=0.2
-  fruit2.lifetime=150
-  fruitG.add(fruit2)
-  }
-
-function fruit3(){
-   var fruit3=createSprite(600,Math.round(random(30,400)),10,10)
-    fruit3.addImage(fruit3Image)
-  fruit3.velocityX=-6
-  fruit3.scale=0.2
-  fruit3.lifetime=150
-  fruitG.add(fruit3)
-  }
-
-function fruit4(){
-   var fruit4=createSprite(600,Math.round(random(30,400)),10,10)
-    fruit4.addImage(fruit4Image)
-  fruit4.velocityX=-6
-  fruit4.scale=0.2
-  fruit4.lifetime=150
-  fruitG.add(fruit4)
-  }
+}
